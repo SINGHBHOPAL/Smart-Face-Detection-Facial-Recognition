@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Face Detection & Recognition Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-face-viewfinder brand-icon"></i>
+                <div class="brand-text">
+                    <h1>AegisEye</h1>
+                    <span>AI VISION PLATFORM</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="live-cam">
+                    <i class="fa-solid fa-camera"></i> Live Tracking
+                </button>
+                <button class="nav-btn" data-tab="image-scanner">
+                    <i class="fa-solid fa-file-image"></i> Image Scanner
+                </button>
+                <button class="nav-btn" data-tab="database">
+                    <i class="fa-solid fa-database"></i> Face Database
+                </button>
+                <button class="nav-btn" data-tab="analytics">
+                    <i class="fa-solid fa-chart-line"></i> Logs & Analytics
+                </button>
+            </nav>
+
+            <div class="system-status">
+                <div class="status-indicator online"></div>
+                <div class="status-details">
+                    <span class="status-label">System Status</span>
+                    <span class="status-value" id="system-status-text">Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header containing stats -->
+            <header class="header">
+                <div class="welcome-section">
+                    <h2>Face Detection Dashboard</h2>
+                    <p>Real-time computer vision analysis & facial recognition</p>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-eye"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-title">Total Scans</span>
+                            <h3 id="stat-total-scans">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-id-card"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-title">Registered Faces</span>
+                            <h3 id="stat-registered-faces">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-title">Match Rate</span>
+                            <h3 id="stat-match-rate">0%</h3>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Tab Content Sections -->
+            <div class="tab-content active" id="live-cam-tab">
+                <div class="live-grid">
+                    <div class="video-card glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-circle-dot live-indicator"></i> Live Camera Feed</h3>
+                            <div class="camera-controls">
+                                <button id="start-camera-btn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Start Stream</button>
+                                <button id="stop-camera-btn" class="btn btn-danger" disabled><i class="fa-solid fa-stop"></i> Stop Stream</button>
+                            </div>
+                        </div>
+                        <div class="viewport-container">
+                            <video id="webcam" autoplay playsinline muted></video>
+                            <canvas id="camera-overlay"></canvas>
+                            <div class="viewport-placeholder" id="viewport-placeholder">
+                                <i class="fa-solid fa-camera-retro placeholder-icon"></i>
+                                <p>Camera Stream Offline</p>
+                                <span>Click 'Start Stream' to activate webcam tracking</span>
+                            </div>
+                            <div class="scanning-bar" id="scanning-laser"></div>
+                        </div>
+                    </div>
+
+                    <div class="control-panel glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-sliders"></i> Real-time Feed Control</h3>
+                        </div>
+                        <div class="detection-metrics">
+                            <div class="metric-row">
+                                <span class="metric-label">Detected Faces</span>
+                                <span class="metric-value badge" id="live-face-count">0</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Active Recognition</span>
+                                <span class="metric-value badge badge-success" id="live-active-names">None</span>
+                            </div>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <div class="quick-register-box">
+                            <h4>Quick Register Face</h4>
+                            <p>Capture the current face in the video feed to register immediately.</p>
+                            <form id="quick-register-form">
+                                <div class="form-group">
+                                    <input type="text" id="quick-name" placeholder="Enter full name" required>
+                                </div>
+                                <button type="submit" id="quick-register-btn" class="btn btn-accent btn-full" disabled>
+                                    <i class="fa-solid fa-plus-circle"></i> Snap & Register
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Scanner Tab -->
+            <div class="tab-content" id="image-scanner-tab">
+                <div class="scanner-grid">
+                    <div class="scanner-main glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-magnifying-glass-chart"></i> Image Face Scanner</h3>
+                        </div>
+                        <div class="upload-dropzone" id="dropzone">
+                            <input type="file" id="image-input" accept="image/*" style="display: none;">
+                            <div class="dropzone-content" id="dropzone-prompt">
+                                <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                                <h3>Drag & Drop Image Here</h3>
+                                <p>or click to browse from files</p>
+                                <span>Supports PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+                            </div>
+                            <div class="preview-container" id="scanner-preview-container" style="display: none;">
+                                <img id="scanner-preview-img" alt="Uploaded Preview">
+                                <canvas id="scanner-overlay"></canvas>
+                            </div>
+                        </div>
+                        <div class="action-bar text-center mt-3">
+                            <button id="reset-scanner-btn" class="btn btn-secondary" style="display: none;">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Scanner
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="scanner-sidebar glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-check"></i> Analysis Results</h3>
+                        </div>
+                        <div class="scanner-results-content" id="scanner-results">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-image placeholder-icon"></i>
+                                <p>No image scanned yet</p>
+                                <span>Upload an image to trigger automated visual audit</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Face Database Tab -->
+            <div class="tab-content" id="database-tab">
+                <div class="database-layout">
+                    <!-- Register New Face Section -->
+                    <div class="registration-panel glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-user-plus"></i> Register New Identity</h3>
+                        </div>
+                        <form id="db-register-form">
+                            <div class="form-group">
+                                <label for="db-name">Full Name</label>
+                                <input type="text" id="db-name" placeholder="e.g. John Doe" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Upload Face Photo</label>
+                                <div class="file-upload-box">
+                                    <input type="file" id="db-image" accept="image/*" required style="display: none;">
+                                    <div class="upload-inner" id="db-upload-inner">
+                                        <i class="fa-solid fa-image-portrait"></i>
+                                        <span>Click to select portrait</span>
+                                    </div>
+                                    <img id="db-preview" alt="Registration Preview" style="display: none;">
+                                </div>
+                            </div>
+
+                            <button type="submit" id="db-register-btn" class="btn btn-accent btn-full">
+                                <i class="fa-solid fa-floppy-disk"></i> Save to Database
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Registered Faces Gallery -->
+                    <div class="gallery-panel glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-address-book"></i> Registered Identities</h3>
+                            <div class="search-box">
+                                <input type="text" id="gallery-search" placeholder="Search identities...">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </div>
+                        </div>
+                        <div class="gallery-grid" id="faces-gallery">
+                            <!-- Populated dynamically -->
+                            <div class="empty-gallery">
+                                <i class="fa-solid fa-users-slash placeholder-icon"></i>
+                                <p>No identities registered</p>
+                                <span>Register a new face to enable smart recognition</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs & Analytics Tab -->
+            <div class="tab-content" id="analytics-tab">
+                <div class="analytics-layout">
+                    <!-- Chart/Metric Visuals -->
+                    <div class="chart-panel glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-chart-bar"></i> Detection Stats</h3>
+                        </div>
+                        <div class="charts-container">
+                            <div class="custom-chart-wrapper">
+                                <h4 class="chart-title">Weekly Scan Volume</h4>
+                                <div class="custom-bar-chart" id="bar-chart-container">
+                                    <!-- Dynamic bars built via JS -->
+                                    <div class="bar-col"><div class="bar-fill" style="height: 10%"></div><span class="bar-lbl">Mon</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 25%"></div><span class="bar-lbl">Tue</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 40%"></div><span class="bar-lbl">Wed</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 60%"></div><span class="bar-lbl">Thu</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 35%"></div><span class="bar-lbl">Fri</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 80%"></div><span class="bar-lbl">Sat</span></div>
+                                    <div class="bar-col"><div class="bar-fill" style="height: 95%"></div><span class="bar-lbl">Sun</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Database -->
+                    <div class="logs-panel glass-panel">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-history"></i> Detection Logs History</h3>
+                            <button id="clear-logs-btn" class="btn btn-secondary btn-sm"><i class="fa-solid fa-trash-can"></i> Clear Logs</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="logs-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Face Count</th>
+                                        <th>Detections</th>
+                                        <th>Captured Image</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logs-table-body">
+                                    <!-- Dynamic entries -->
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="logs-empty-state" style="display: none;">
+                                <i class="fa-solid fa-folder-open placeholder-icon"></i>
+                                <p>No detection logs recorded</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification system toast container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Modal for viewing historical image -->
+    <div id="image-modal" class="modal">
+        <span class="close-modal" id="close-modal-btn">&times;</span>
+        <img class="modal-content" id="modal-img">
+        <div id="modal-caption"></div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="/static/main.js"></script>
+</body>
+</html>
